@@ -4,8 +4,7 @@ const { v4 } = require("uuid")
 function socket_server(server) {
     const io = new Server(server, {
         cors: {
-            origin: "/"
-            // origin: "http://127.0.0.1:5173"
+            origin: process.env.NODE_ENV == 'production' ? "/" : "http://127.0.0.1:5173"
         }
     })
 
@@ -131,8 +130,9 @@ function socket_server(server) {
 
 
         // TODO:
+        let winner = null
         socket.on("send_moves", ({ room, turn, index }) => {
-            let winner = null
+            winner = null
             if (turn) {
                 cells[index] = 'X'
                 move.player1.push(index);
@@ -161,7 +161,8 @@ function socket_server(server) {
             removeUser(socket.id)
             let opp = users.find(u => u.roomId == userRoom?.roomId)
             if (opp?.socketId) {
-                socket.to(opp.socketId).emit("user_left_room")
+                console.log({ winner });
+                socket.to(opp.socketId).emit("user_left_room", {w:winner})
             }
             io.emit("online_players", users)
             console.log("A User Disconnected");
