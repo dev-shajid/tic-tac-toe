@@ -5,13 +5,14 @@ function socket_server(server) {
     const io = new Server(server, {
         cors: {
             origin: process.env.NODE_ENV == 'production' ? "/" : "http://127.0.0.1:5173"
+            // origin: "/"
         }
     })
 
     let users = []
 
     let addUser = (id, name, socketId) => {
-        users.push({ id, name, socketId, roomId: null })
+        users.push({ id, name, socketId, roomId: null, win: null })
     }
 
     let getUser = (id) => {
@@ -88,7 +89,7 @@ function socket_server(server) {
             let sender = getUser(from)
             let receiver = getUser(to)
 
-            socket.to(receiver.socketId).emit("get_challange", { sender, receiver })
+            socket.to(receiver?.socketId).emit("get_challange", { sender, receiver })
         })
 
         socket.on("challange_accepted", ({ sender, receiver }) => {
@@ -106,6 +107,8 @@ function socket_server(server) {
 
                 io.emit("online_players", users)
 
+                sender.win = null
+                receiver.win = null
                 io.to(sender.socketId).to(receiver.socketId).emit("welcome_game", {
                     roomId,
                     sender: getUser(sender.id),
@@ -122,7 +125,10 @@ function socket_server(server) {
         socket.on("send_room", ({ roomId }) => {
             console.log("Send Room");
             let room = users.filter(user => user.roomId == roomId)
-            // console.log(room);
+            let p1=users.find(u=>u.id==room[0].id)
+            let p2=users.find(u=>u.id==room[1].id)
+            p1.win=null
+            p2.win=null
             if (room.length == 2) {
                 io.to(room[0].socketId).to(room[1].socketId).emit("get_room", { r: room })
             }
@@ -130,9 +136,8 @@ function socket_server(server) {
 
 
         // TODO:
-        let winner = null
         socket.on("send_moves", ({ room, turn, index }) => {
-            winner = null
+            let winner = null
             if (turn) {
                 cells[index] = 'X'
                 move.player1.push(index);
@@ -145,9 +150,12 @@ function socket_server(server) {
                 turn = 1
             }
             if (winner == 0 || winner == 1 || winner == -1) {
-                console.log("Got winner");
-                updateUserRoom(room[0].id, null)
-                updateUserRoom(room[1].id, null)
+                let p1 = users.find(u => u.id == room[0].id)
+                let p2 = users.find(u => u.id == room[1].id)
+                p1.roomId = null
+                p2.roomId = null
+                p1.win = winner
+                p2.win = winner
                 io.emit("online_players", users)
                 // console.log({ users });
             }
@@ -160,9 +168,9 @@ function socket_server(server) {
             let userRoom = users.find(u => u.socketId == socket.id)
             removeUser(socket.id)
             let opp = users.find(u => u.roomId == userRoom?.roomId)
+            // console.log({ opp, userRoom });
             if (opp?.socketId) {
-                console.log({ winner });
-                socket.to(opp.socketId).emit("user_left_room", {w:winner})
+                socket.to(opp.socketId).emit("user_left_room", { w: opp.win })
             }
             io.emit("online_players", users)
             console.log("A User Disconnected");
