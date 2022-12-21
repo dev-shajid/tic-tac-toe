@@ -77,11 +77,15 @@ function socket_server(server) {
 
         socket.on("add_player", ({ id, name }) => {
             let user = getUser(id)
-            if (!user) addUser(id, name, socket.id)
+            if (!user?.id) addUser(id, name, socket.id)
             else socket.emit("user_exist")
-
+            // console.log({ user, id, users });
+            
+            // io.emit("online_players", users)
+        })
+        
+        socket.on("get_online_players",()=>{
             io.emit("online_players", users)
-            // console.log(users);
         })
 
         socket.on("send_challange", ({ from, to }) => {
