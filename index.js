@@ -8,11 +8,14 @@ const app = express()
 const port = process.env.PORT || 8000
 const httpServer = createServer(app)
 
+app.get("/test",(req,res)=>res.json({message:"It is a testing api"}))
+
 io(httpServer)
 
 
 app.use(cors())
 app.use(express.json())
+
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.resolve(__dirname, "./client/build")));
