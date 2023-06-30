@@ -19,12 +19,12 @@ app.use(cors({
 app.use(express.json())
 
 
-// if (process.env.NODE_ENV == "production") {
-// app.use(express.static(path.resolve(__dirname, "./client/build")));
-// app.get("*", function (request, response) {
-//   response.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
-// });
-// }
+if (process.env.NODE_ENV == "production") {
+app.use(express.static(path.resolve(__dirname, "./client/build")));
+app.get("*", function (request, response) {
+  response.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+});
+}
 
 
 httpServer.listen(port, () => console.log(`Server is running in port http://localhost:8000`))
