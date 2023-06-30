@@ -13,7 +13,9 @@ app.get("/test", (req, res) => res.json({ message: "It is a testing api" }))
 io(httpServer)
 
 
-app.use(cors())
+app.use(cors({
+  origin:'*'
+}))
 app.use(express.json())
 
 
